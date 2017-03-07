@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
     android:descendantFocusability="blocksDescendants"
     android:orientation="vertical">
 
@@ -26,22 +27,23 @@
                 android:id="@+id/list_imageView"
                 android:layout_width="@dimen/list_item_height"
                 android:layout_height="@dimen/list_item_width"
-                android:src="@drawable/ic_person_outline_black_52dp"
-                app:border_width="@dimen/border_width"
-                app:border_color="@color/border_color"
+                android:src="@drawable/ic_person_outline_black_32dp"
+                app:civ_border_width="@dimen/border_width"
+                app:civ_border_color="@color/border_color"
                 />
 
                 </LinearLayout>
 
             <TextView
                 android:id="@+id/username_textView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:layout_marginStart="12dp"
+                android:gravity="center_vertical"
                 android:textColor="@color/list_text_color"
                 android:textSize="@dimen/list_text_size"
                 android:textStyle="bold"
-                android:text="@string/username_test"
+                tools:text="@string/username_test"
                 />
 
         </LinearLayout>

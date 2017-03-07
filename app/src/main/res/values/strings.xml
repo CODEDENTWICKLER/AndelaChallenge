@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">AndelaChallenge</string>
     <string name="username_test">Jake Burton</string>
-    <string name="title_item_list">Items</string>
-    <string name="title_item_detail">Item Detail</string>
+    <string name="title_item_list">Java Developers</string>
+    <string name="title_developer_profile">Profile</string>
+    <string name="share_text">Check out this awesome developer @%1$S , %2$S</string>
+    <string name="action_search">Search</string>
 </resources>

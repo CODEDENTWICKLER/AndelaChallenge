@@ -20,7 +20,8 @@ public class Developer implements Parcelable {
     private String githubProfileUrl;
 
     public Developer(String username, String imageUrl, String githubUrl) {
-        this.username = username;
+        this.username = username.toLowerCase()
+        ;
         this.imageUrl = imageUrl;
         this.githubProfileUrl = githubUrl;
     }
