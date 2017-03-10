@@ -14,18 +14,16 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.Response;
-import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.andelachallenge.AppController;
 import com.example.andelachallenge.R;
+import com.example.andelachallenge.Utils;
 import com.example.andelachallenge.adapter.DevelopersAdapter;
 import com.example.andelachallenge.data.DeveloperContract.DeveloperEntry;
 import com.example.andelachallenge.model.Developer;
-import com.example.andelachallenge.Utils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -37,7 +35,7 @@ import java.util.Comparator;
 
 import static com.example.andelachallenge.Utils.GITHUB_IMAGE_URL_KEY;
 import static com.example.andelachallenge.Utils.GITHUB_PROFILE_URL_KEY;
-import static com.example.andelachallenge.Utils.GITHUB_QUERY_URL_WITH_ACCESS_TOKEN;
+import static com.example.andelachallenge.Utils.GITHUB_QUERY_URL_WITH_PAGINATION;
 import static com.example.andelachallenge.Utils.GITHUB_USERNAME_KEY;
 
 /**
@@ -99,10 +97,13 @@ public class DeveloperListActivity extends AppCompatActivity {
         mDeveloperAdapter = new DevelopersAdapter(this, mComparator);
 
         if ((savedInstanceState == null) || !savedInstanceState.containsKey(PERSIST_LIST_KEY)) {
-            if (Utils.isConnected(this))
+            if (Utils.isConnected(this) && Utils.isNetworkAvailable(this)) {
                 fetchDataAndInsertIntoDatabase();
-            else
+            }
+            else {
+                Utils.makeSnackBar(mRecyclerView,"Your device Currently Offline");
                 fetchDataFromDatabase();
+            }
         }
         else {
             mDeveloperList = savedInstanceState.getParcelableArrayList(PERSIST_LIST_KEY);
@@ -175,7 +176,7 @@ public class DeveloperListActivity extends AppCompatActivity {
 
     private void fetchDataAndInsertIntoDatabase(){
 
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, GITHUB_QUERY_URL_WITH_ACCESS_TOKEN, null,
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, GITHUB_QUERY_URL_WITH_PAGINATION, null,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
@@ -198,15 +199,16 @@ public class DeveloperListActivity extends AppCompatActivity {
                                 contentValues[i].put(DeveloperEntry.COLUMN_DEVELOPER_GITHUB_PROFILE_URL,profileUrl);
                                 contentValues[i].put(DeveloperEntry.COLUMN_DEVELOPER_IMAGE_URL,imageUrl);
 
-                                mDeveloperList.add(new Developer(username,imageUrl,profileUrl));
+//                                mDeveloperList.add(new Developer(username,imageUrl,profileUrl));
 
-                                // Insert Data into DB
                             }
+                            // Insert Data into DB
+
                             getContentResolver().bulkInsert(DeveloperEntry.CONTENT_URI,contentValues);
 
-                            sortList();
-                            mDeveloperAdapter.add(mDeveloperList);
-
+//                            sortList();
+//                            mDeveloperAdapter.add(mDeveloperList);
+                            fetchDataFromDatabase();
 
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -223,12 +225,9 @@ public class DeveloperListActivity extends AppCompatActivity {
                     }
                 }
         );
-        int socketTimeout = 50000;
         //Add the Request to the Request Queue
         AppController.getInstance().addToRequestQueue(jsonObjectRequest);
-        RetryPolicy policy =
-                new DefaultRetryPolicy(socketTimeout, 2, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
-        jsonObjectRequest.setRetryPolicy(policy);
+
     }
 
 
@@ -245,8 +244,6 @@ public class DeveloperListActivity extends AppCompatActivity {
         int imageUrlColumnIndex = cursor.getColumnIndex(DeveloperEntry.COLUMN_DEVELOPER_IMAGE_URL);
         int profileUrlColumnIndex = cursor.getColumnIndex(DeveloperEntry.COLUMN_DEVELOPER_GITHUB_PROFILE_URL);
 
-
-
         try {
             cursor.moveToFirst();
             while (cursor.moveToNext()) {
@@ -256,15 +253,14 @@ public class DeveloperListActivity extends AppCompatActivity {
                 String profileUrl = cursor.getString(profileUrlColumnIndex);
 
                 mDeveloperList.add(new Developer(username,imageUrl,profileUrl));
-
             }
         }
         finally {
             cursor.close();
         }
         mDeveloperAdapter.add(mDeveloperList);
+        mDeveloperAdapter.notifyDataSetChanged();
         sortList();
-
     }
 
 }
