@@ -9,6 +9,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import com.example.andelachallenge.data.DeveloperContract.DeveloperEntry;
 
 import static android.content.ContentValues.TAG;
 
@@ -27,7 +28,7 @@ public class DeveloperProvider extends ContentProvider {
 
     static {
         sUriMatcher.addURI(DeveloperContract.AUTHORITY, DeveloperEntry.TABLE_NAME, DEVELOPERS);
-        sUriMatcher.addURI(DeveloperContract.AUTHORITY, DeveloperContract.DeveloperEntry.TABLE_NAME + "/#",DEVELOPERS_ID);
+        sUriMatcher.addURI(DeveloperContract.AUTHORITY, DeveloperEntry.TABLE_NAME + "/#",DEVELOPERS_ID);
 
     }
 
@@ -89,7 +90,7 @@ public class DeveloperProvider extends ContentProvider {
 
             case DEVELOPERS:
 
-                long id = insertPet(contentValues);
+                long id = insertDeveloper(contentValues);
                 getContext().getContentResolver().notifyChange(uri, null);
                 return ContentUris.withAppendedId(uri, id);
 
@@ -99,7 +100,7 @@ public class DeveloperProvider extends ContentProvider {
         }
     }
 
-    private long insertPet(ContentValues contentValues) {
+    private long insertDeveloper(ContentValues contentValues) {
 
         SQLiteDatabase database = mDbHelper.getWritableDatabase();
 
@@ -127,7 +128,6 @@ public class DeveloperProvider extends ContentProvider {
             default:
                 throw new IllegalArgumentException("Deletion cannot be done on unknown uri"+uri);
         }
-
     }
 
     @Override

@@ -16,7 +16,7 @@ public class DeveloperDbHelper extends SQLiteOpenHelper {
     private static final String CREATE_TABLE_ENTRIES_QUERY =
             "CREATE TABLE " + DeveloperContract.DeveloperEntry.TABLE_NAME +
             " ( " + DeveloperContract.DeveloperEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    DeveloperContract.DeveloperEntry.COLUMN_DEVELOPER_USERNAME + " TEXT NOT NULL, " +
+                    DeveloperContract.DeveloperEntry.COLUMN_DEVELOPER_USERNAME + " TEXT NOT NULL UNIQUE, " +
                     DeveloperContract.DeveloperEntry.COLUMN_DEVELOPER_GITHUB_PROFILE_URL + " TEXT NOT NULL, " +
                     DeveloperContract.DeveloperEntry.COLUMN_DEVELOPER_IMAGE_URL + " TEXT NOT NULL "+");";
 
@@ -34,7 +34,7 @@ public class DeveloperDbHelper extends SQLiteOpenHelper {
     }
 
     @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {
         sqLiteDatabase.execSQL(DROP_TABLE_QUERY);
     }
 }

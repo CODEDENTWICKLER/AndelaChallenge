@@ -15,7 +15,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.andelachallenge.R;
 import com.example.andelachallenge.activities.DeveloperDetailActivity;
-import com.example.andelachallenge.activities.DeveloperDetailFragment;
+import com.example.andelachallenge.fragments.DeveloperDetailFragment;
 import com.example.andelachallenge.activities.DeveloperListActivity;
 import com.example.andelachallenge.model.Developer;
 

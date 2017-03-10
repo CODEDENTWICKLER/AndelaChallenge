@@ -14,8 +14,10 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.Response;
+import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.andelachallenge.AppController;
@@ -23,6 +25,7 @@ import com.example.andelachallenge.R;
 import com.example.andelachallenge.adapter.DevelopersAdapter;
 import com.example.andelachallenge.data.DeveloperContract.DeveloperEntry;
 import com.example.andelachallenge.model.Developer;
+import com.example.andelachallenge.Utils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -32,11 +35,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-import static com.example.andelachallenge.model.Utils.GITHUB_IMAGE_URL_KEY;
-import static com.example.andelachallenge.model.Utils.GITHUB_PROFILE_URL_KEY;
-import static com.example.andelachallenge.model.Utils.GITHUB_QUERY_URL_WITH_ACCESS_TOKEN;
-import static com.example.andelachallenge.model.Utils.GITHUB_USERNAME_KEY;
-import static com.example.andelachallenge.model.Utils.PERSIST_LIST_KEY;
+import static com.example.andelachallenge.Utils.GITHUB_IMAGE_URL_KEY;
+import static com.example.andelachallenge.Utils.GITHUB_PROFILE_URL_KEY;
+import static com.example.andelachallenge.Utils.GITHUB_QUERY_URL_WITH_ACCESS_TOKEN;
+import static com.example.andelachallenge.Utils.GITHUB_USERNAME_KEY;
 
 /**
  * An activity representing a list of Items. This activity
@@ -47,6 +49,9 @@ import static com.example.andelachallenge.model.Utils.PERSIST_LIST_KEY;
  * item details side-by-side using two vertical panes.
  */
 public class DeveloperListActivity extends AppCompatActivity {
+
+    public static final String PERSIST_LIST_KEY = "key";
+
 
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
@@ -62,7 +67,6 @@ public class DeveloperListActivity extends AppCompatActivity {
     private DevelopersAdapter mDeveloperAdapter;
 
     private static final String TAG = "TESTER";
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,15 +88,6 @@ public class DeveloperListActivity extends AppCompatActivity {
 
         mDeveloperList = new ArrayList<>();
 
-
-        if ((savedInstanceState == null) || !savedInstanceState.containsKey(PERSIST_LIST_KEY)) {
-            fetchDataAndInsertIntoDatabase();
-        }
-        else {
-            mDeveloperList = savedInstanceState.getParcelableArrayList(PERSIST_LIST_KEY);
-        }
-
-
         mComparator = new Comparator<Developer>() {
 
             @Override
@@ -102,6 +97,18 @@ public class DeveloperListActivity extends AppCompatActivity {
 
         };
         mDeveloperAdapter = new DevelopersAdapter(this, mComparator);
+
+        if ((savedInstanceState == null) || !savedInstanceState.containsKey(PERSIST_LIST_KEY)) {
+            if (Utils.isConnected(this))
+                fetchDataAndInsertIntoDatabase();
+            else
+                fetchDataFromDatabase();
+        }
+        else {
+            mDeveloperList = savedInstanceState.getParcelableArrayList(PERSIST_LIST_KEY);
+        }
+
+        Log.d(TAG, String.valueOf(mDeveloperList.size()));
 
         LinearLayoutManagerWrapper layoutManager = new LinearLayoutManagerWrapper(this);
 
@@ -162,7 +169,7 @@ public class DeveloperListActivity extends AppCompatActivity {
 
     @Override
     public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
-        outState.putParcelableArrayList(TAG, mDeveloperList);
+        outState.putParcelableArrayList(PERSIST_LIST_KEY, mDeveloperList);
         super.onSaveInstanceState(outState, outPersistentState);
     }
 
@@ -191,10 +198,15 @@ public class DeveloperListActivity extends AppCompatActivity {
                                 contentValues[i].put(DeveloperEntry.COLUMN_DEVELOPER_GITHUB_PROFILE_URL,profileUrl);
                                 contentValues[i].put(DeveloperEntry.COLUMN_DEVELOPER_IMAGE_URL,imageUrl);
 
-                                // Insert Data into DB
-                                getContentResolver().bulkInsert(DeveloperEntry.CONTENT_URI,contentValues);
+                                mDeveloperList.add(new Developer(username,imageUrl,profileUrl));
 
+                                // Insert Data into DB
                             }
+                            getContentResolver().bulkInsert(DeveloperEntry.CONTENT_URI,contentValues);
+
+                            sortList();
+                            mDeveloperAdapter.add(mDeveloperList);
+
 
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -211,31 +223,39 @@ public class DeveloperListActivity extends AppCompatActivity {
                     }
                 }
         );
-
+        int socketTimeout = 50000;
         //Add the Request to the Request Queue
         AppController.getInstance().addToRequestQueue(jsonObjectRequest);
+        RetryPolicy policy =
+                new DefaultRetryPolicy(socketTimeout, 2, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
+        jsonObjectRequest.setRetryPolicy(policy);
     }
 
 
-    private void fetchListFromDatabase(){
+    private void fetchDataFromDatabase(){
 
         /* Query List On UI thread, since query is not large,
                  Cant affect UI thread
          */
 
         Cursor cursor = getContentResolver()
-                .query(DeveloperEntry.CONTENT_URI,null,null,null,null);
+                .query(DeveloperEntry.CONTENT_URI, null, null, null, null);
 
         int usernameColumnIndex = cursor.getColumnIndex(DeveloperEntry.COLUMN_DEVELOPER_USERNAME);
         int imageUrlColumnIndex = cursor.getColumnIndex(DeveloperEntry.COLUMN_DEVELOPER_IMAGE_URL);
         int profileUrlColumnIndex = cursor.getColumnIndex(DeveloperEntry.COLUMN_DEVELOPER_GITHUB_PROFILE_URL);
 
+
+
         try {
             cursor.moveToFirst();
             while (cursor.moveToNext()) {
 
-                mDeveloperList.add(new Developer(cursor.getString(usernameColumnIndex)
-                        ,cursor.getString(imageUrlColumnIndex),cursor.getString(profileUrlColumnIndex)));
+                String username = cursor.getString(usernameColumnIndex);
+                String imageUrl = cursor.getString(imageUrlColumnIndex);
+                String profileUrl = cursor.getString(profileUrlColumnIndex);
+
+                mDeveloperList.add(new Developer(username,imageUrl,profileUrl));
 
             }
         }

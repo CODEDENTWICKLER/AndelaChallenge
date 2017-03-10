@@ -13,7 +13,7 @@
         android:layout_height="@dimen/image_height"
         android:layout_marginBottom="@dimen/image_margin"
         android:padding="@dimen/image_padding"
-        android:src="@drawable/profile"
+        android:src="@drawable/ic_person_outline_black_24dp"
         android:visibility="gone"
         app:civ_border_color="@android:color/darker_gray"
         app:civ_border_width="2dp" />
@@ -57,7 +57,7 @@
                     android:textAppearance="?android:textAppearanceMedium"
                     android:layout_marginStart="@dimen/fab_margin"
                     android:textIsSelectable="true"
-                    tools:context="com.example.andelachallenge.activities.DeveloperDetailFragment" />
+                    tools:context="com.example.andelachallenge.fragments.DeveloperDetailFragment" />
 
             </LinearLayout>
 
@@ -87,7 +87,7 @@
                     android:clickable="true"
                     android:autoLink="web"
                     android:textIsSelectable="true"
-                    tools:context="com.example.andelachallenge.activities.DeveloperDetailFragment" />
+                    tools:context="com.example.andelachallenge.fragments.DeveloperDetailFragment" />
 
             </LinearLayout>
 

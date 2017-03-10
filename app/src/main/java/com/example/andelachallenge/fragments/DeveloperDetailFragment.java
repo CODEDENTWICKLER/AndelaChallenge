@@ -1,4 +1,4 @@
-package com.example.andelachallenge.activities;
+package com.example.andelachallenge.fragments;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.ShareActionProvider;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +17,8 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.andelachallenge.R;
+import com.example.andelachallenge.activities.DeveloperDetailActivity;
+import com.example.andelachallenge.activities.DeveloperListActivity;
 import com.example.andelachallenge.model.Developer;
 
 /**
@@ -33,7 +34,6 @@ public class DeveloperDetailFragment extends Fragment {
      */
     public ImageView mImageView;
 
-    private ShareActionProvider mShareActionProvider;
 
     public static final String ARG_ITEM = "item_id";
 
@@ -74,7 +74,6 @@ public class DeveloperDetailFragment extends Fragment {
                 collapsingToolbarLayout.setTitle(getActivity().getTitle());
 
                 mImageView = (ImageView) collapsingToolbarLayout.findViewById(R.id.profile_image);
-
             }
             else {
                 mImageView = (ImageView) rootView.findViewById(R.id.profile_image_two_pane);
@@ -85,7 +84,7 @@ public class DeveloperDetailFragment extends Fragment {
                     .load(mDeveloper.getImageUrl())
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .centerCrop()
-                    .placeholder(R.drawable.ic_person_outline_black_32dp)
+                    .placeholder(R.drawable.ic_person_outline_black_24dp)
                     .into(mImageView);
 
 

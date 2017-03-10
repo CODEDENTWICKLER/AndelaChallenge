@@ -8,6 +8,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 
 import com.example.andelachallenge.R;
+import com.example.andelachallenge.fragments.DeveloperDetailFragment;
 
 /**
  * An activity representing a single Item detail screen. This
@@ -49,7 +50,7 @@ public class DeveloperDetailActivity extends AppCompatActivity {
             DeveloperDetailFragment fragment = new DeveloperDetailFragment();
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.item_detail_container, fragment)
+                    .replace(R.id.item_detail_container, fragment)
                     .commit();
         }
     }
