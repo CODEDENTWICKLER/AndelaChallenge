@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:tools="http://schemas.android.com/tools"
+    android:background="@drawable/selector_row"
     android:descendantFocusability="blocksDescendants"
     android:orientation="vertical">
 
@@ -29,8 +30,7 @@
                 android:layout_height="@dimen/list_item_width"
                 android:src="@drawable/ic_person_outline_black_32dp"
                 app:civ_border_width="@dimen/border_width"
-                app:civ_border_color="@color/border_color"
-                />
+                app:civ_border_color="@color/border_color" />
 
                 </LinearLayout>
 
@@ -42,9 +42,7 @@
                 android:gravity="center_vertical"
                 android:textColor="@color/list_text_color"
                 android:textSize="@dimen/list_text_size"
-                android:textStyle="bold"
-                tools:text="@string/username_test"
-                />
+                tools:text="@string/username_test" />
 
         </LinearLayout>
 

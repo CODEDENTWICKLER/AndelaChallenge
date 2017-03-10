@@ -7,14 +7,11 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.ShareActionProvider;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -55,54 +52,6 @@ public class DeveloperDetailFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-
-        inflater.inflate(R.menu.fragment_menu,menu);
-
-        super.onCreateOptionsMenu(menu, inflater);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem menuItem) {
-
-        switch (menuItem.getItemId()) {
-
-            case R.id.menu_item_share:
-
-                mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
-                shareDeveloperProfile();
-
-                return true;
-            default:
-                return false;
-
-        }
-    }
-
-    private Intent shareDeveloperProfile() {
-        Intent shareIntent = new Intent(android.content.Intent.ACTION_SEND);
-        shareIntent.setType("text/plain");
-        String shareBody = getString(
-                R.string.share_text,mDeveloper.getUsername(),mDeveloper.getGithubProfileUrl());
-        shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Developer Profile");
-        shareIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
-        return shareIntent;
-
-    }
-
-
-
-    // Call to update the share intent
-    private void setShareIntent(Intent shareIntent) {
-        if (mShareActionProvider != null) {
-            mShareActionProvider.setShareIntent(shareIntent);
-        }
-
-
     }
 
     @Override
@@ -135,6 +84,7 @@ public class DeveloperDetailFragment extends Fragment {
             Glide.with(getActivity())
                     .load(mDeveloper.getImageUrl())
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .centerCrop()
                     .placeholder(R.drawable.ic_person_outline_black_32dp)
                     .into(mImageView);
 
@@ -155,8 +105,27 @@ public class DeveloperDetailFragment extends Fragment {
                 }
             });
 
+            Button shareButton = (Button) rootView.findViewById(R.id.share);
+
+            shareButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    setUpShareIntent();
+                }
+            });
+
         }
 
         return rootView;
+    }
+    private void setUpShareIntent() {
+        Intent shareIntent = new Intent(android.content.Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        String shareBody = getString(
+                R.string.share_text,mDeveloper.getUsername(),mDeveloper.getGithubProfileUrl());
+        shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Developer Profile");
+        shareIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
+        startActivity(Intent.createChooser(shareIntent,getString(R.string.share_via)));
+
     }
 }

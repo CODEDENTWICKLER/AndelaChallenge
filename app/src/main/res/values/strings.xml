@@ -3,6 +3,8 @@
     <string name="username_test">Jake Burton</string>
     <string name="title_item_list">Java Developers</string>
     <string name="title_developer_profile">Profile</string>
-    <string name="share_text">Check out this awesome developer @%1$S , %2$S</string>
+    <string name="share_text">Check out this awesome developer @%1$s , %2$s</string>
     <string name="action_search">Search</string>
+    <string name="share">Share</string>
+    <string name="share_via">Share Via</string>
 </resources>

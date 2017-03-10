@@ -7,13 +7,16 @@
     <dimen name="list_item_height">52dp</dimen>
     <dimen name="list_item_width">52dp</dimen>
     <dimen name="border_width">1dp</dimen>
-    <dimen name="list_text_size">24sp</dimen>
+    <dimen name="list_text_size">16sp</dimen>
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="app_bar_height">400dp</dimen>
-    <dimen name="item_width">300dp</dimen>
+    <dimen name="item_width">324dp</dimen>
     <dimen name="text_margin">16dp</dimen>
     <dimen name="image_padding">8dp</dimen>
+    <dimen name="image_width">226dp</dimen>
     <dimen name="image_margin">16dp</dimen>
     <dimen name="profile_text_view_margin">4dp</dimen>
+    <dimen name="button_padding">16dp</dimen>
+    <dimen name="image_height">226dp</dimen>
 
 </resources>

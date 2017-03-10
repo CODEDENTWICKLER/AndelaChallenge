@@ -20,8 +20,7 @@ public class Developer implements Parcelable {
     private String githubProfileUrl;
 
     public Developer(String username, String imageUrl, String githubUrl) {
-        this.username = username.toLowerCase()
-        ;
+        this.username = username.toLowerCase();
         this.imageUrl = imageUrl;
         this.githubProfileUrl = githubUrl;
     }
@@ -67,5 +66,29 @@ public class Developer implements Parcelable {
         dest.writeString(username);
         dest.writeString(imageUrl);
         dest.writeString(githubProfileUrl);
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Developer developer = (Developer) o;
+
+        if (username != null ? !username.equals(developer.username) : developer.username != null)
+            return false;
+        if (imageUrl != null ? !imageUrl.equals(developer.imageUrl) : developer.imageUrl != null)
+            return false;
+        return githubProfileUrl != null ? githubProfileUrl.equals(developer.githubProfileUrl) : developer.githubProfileUrl == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = username != null ? username.hashCode() : 0;
+        result = 31 * result + (imageUrl != null ? imageUrl.hashCode() : 0);
+        result = 31 * result + (githubProfileUrl != null ? githubProfileUrl.hashCode() : 0);
+        return result;
     }
 }
