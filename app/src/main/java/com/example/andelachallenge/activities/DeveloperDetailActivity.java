@@ -16,6 +16,7 @@ import com.example.andelachallenge.fragments.DeveloperDetailFragment;
  * item details are presented side-by-side with a list of items
  * in a {@link DeveloperListActivity}.
  */
+
 public class DeveloperDetailActivity extends AppCompatActivity {
 
     @Override

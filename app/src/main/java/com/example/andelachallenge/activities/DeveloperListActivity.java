@@ -7,7 +7,6 @@ import android.os.PersistableBundle;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -21,6 +20,7 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.andelachallenge.AppController;
 import com.example.andelachallenge.R;
 import com.example.andelachallenge.Utils;
+import com.example.andelachallenge.Views.RecyclerViewEmptySupport;
 import com.example.andelachallenge.adapter.DevelopersAdapter;
 import com.example.andelachallenge.data.DeveloperContract.DeveloperEntry;
 import com.example.andelachallenge.model.Developer;
@@ -32,11 +32,16 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
 import static com.example.andelachallenge.Utils.GITHUB_IMAGE_URL_KEY;
 import static com.example.andelachallenge.Utils.GITHUB_PROFILE_URL_KEY;
 import static com.example.andelachallenge.Utils.GITHUB_QUERY_URL_WITH_PAGINATION;
 import static com.example.andelachallenge.Utils.GITHUB_USERNAME_KEY;
+import static com.example.andelachallenge.Utils.SIZE_PER_PAGE;
+import static com.example.andelachallenge.Utils.isNetworkConnected;
+
+;
 
 /**
  * An activity representing a list of Items. This activity
@@ -50,20 +55,15 @@ public class DeveloperListActivity extends AppCompatActivity {
 
     public static final String PERSIST_LIST_KEY = "key";
 
-
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
      * device.
      */
     public static boolean mTwoPane;
     private ArrayList<Developer> mDeveloperList;
-
-    RecyclerView mRecyclerView;
-
+    RecyclerViewEmptySupport mRecyclerView;
     public Comparator<Developer> mComparator;
-
     private DevelopersAdapter mDeveloperAdapter;
-
     private static final String TAG = "TESTER";
 
     @Override
@@ -82,7 +82,8 @@ public class DeveloperListActivity extends AppCompatActivity {
             // activity should be in two-pane mode.
             mTwoPane = true;
         }
-        mRecyclerView = (RecyclerView) findViewById(R.id.item_list);
+
+        setUpRecyclerView();
 
         mDeveloperList = new ArrayList<>();
 
@@ -96,30 +97,44 @@ public class DeveloperListActivity extends AppCompatActivity {
         };
         mDeveloperAdapter = new DevelopersAdapter(this, mComparator);
 
-        if ((savedInstanceState == null) || !savedInstanceState.containsKey(PERSIST_LIST_KEY)) {
-            if (Utils.isConnected(this) && Utils.isNetworkAvailable(this)) {
-                fetchDataAndInsertIntoDatabase();
-            }
-            else {
-                Utils.makeSnackBar(mRecyclerView,"Your device Currently Offline");
-                fetchDataFromDatabase();
-            }
-        }
-        else {
+//        || !savedInstanceState.containsKey(PERSIST_LIST_KEY)
+        if (savedInstanceState != null){
             mDeveloperList = savedInstanceState.getParcelableArrayList(PERSIST_LIST_KEY);
         }
 
-        Log.d(TAG, String.valueOf(mDeveloperList.size()));
+        else {
+            if (isNetworkConnected(this) && mDeveloperList.isEmpty()) {
+                fetchDataAndInsertIntoDatabase();
+            }
+            else
+                Utils.makeSnackBar(mRecyclerView,"Your device Currently Offline");
+
+            mDeveloperList.addAll(fetchDataFromDatabase());
+
+        }
+
+        if (mDeveloperList != null ){
+            mDeveloperAdapter.swap(mDeveloperList);
+        }
+        mRecyclerView.setAdapter(mDeveloperAdapter);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mRecyclerView.emptyObserver.onChanged();
+    }
+
+    private void setUpRecyclerView(){
+        mRecyclerView = (RecyclerViewEmptySupport) findViewById(R.id.item_list);
 
         LinearLayoutManagerWrapper layoutManager = new LinearLayoutManagerWrapper(this);
-
         mRecyclerView.setLayoutManager(layoutManager);
         DividerItemDecoration dividerItemDecoration =
                 new DividerItemDecoration(this, layoutManager.getOrientation());
-
         mRecyclerView.addItemDecoration(dividerItemDecoration);
-        mRecyclerView.setAdapter(mDeveloperAdapter);
 
+        mRecyclerView.setEmptyView(findViewById(R.id.list_empty));
     }
 
     @Override
@@ -150,9 +165,9 @@ public class DeveloperListActivity extends AppCompatActivity {
         return true;
     }
 
-    public void sortList(){
+    public void sortList(List<Developer> developers){
 
-        Collections.sort( mDeveloperList,mComparator);
+        Collections.sort( developers,mComparator);
         mDeveloperAdapter.notifyDataSetChanged();
     }
 
@@ -170,8 +185,10 @@ public class DeveloperListActivity extends AppCompatActivity {
 
     @Override
     public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
-        outState.putParcelableArrayList(PERSIST_LIST_KEY, mDeveloperList);
+
         super.onSaveInstanceState(outState, outPersistentState);
+        if (!mDeveloperList.isEmpty())
+            outState.putParcelableArrayList(PERSIST_LIST_KEY, mDeveloperList);
     }
 
     private void fetchDataAndInsertIntoDatabase(){
@@ -180,13 +197,16 @@ public class DeveloperListActivity extends AppCompatActivity {
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        mDeveloperList.clear();
-                        getContentResolver().delete(DeveloperEntry.CONTENT_URI, null, null);
 
+                        getContentResolver().delete(DeveloperEntry.CONTENT_URI, null,null);
+
+                        ContentValues[] contentValues;
                         try {
+                            int total_count = response.getInt("total_count");
+                            int noOfPages = (int) Math.ceil(total_count/Integer.parseInt(SIZE_PER_PAGE));
                             JSONArray developers = response.getJSONArray("items");
                             final int NO_OF_DEVELOPERS = developers.length();
-                            ContentValues[] contentValues = new ContentValues[NO_OF_DEVELOPERS];
+                            contentValues = new ContentValues[NO_OF_DEVELOPERS];
 
                             for (int i = 0; i < developers.length();i++){
                                 contentValues[i] = new ContentValues();
@@ -200,15 +220,13 @@ public class DeveloperListActivity extends AppCompatActivity {
                                 contentValues[i].put(DeveloperEntry.COLUMN_DEVELOPER_IMAGE_URL,imageUrl);
 
 //                                mDeveloperList.add(new Developer(username,imageUrl,profileUrl));
-
                             }
                             // Insert Data into DB
+                            int n = getContentResolver().bulkInsert(DeveloperEntry.CONTENT_URI,contentValues);
 
-                            getContentResolver().bulkInsert(DeveloperEntry.CONTENT_URI,contentValues);
+                            Utils.makeSnackBar(mRecyclerView, n + " new row inserted into Developers Table ");
 
-//                            sortList();
-//                            mDeveloperAdapter.add(mDeveloperList);
-                            fetchDataFromDatabase();
+//                            mDeveloperList = fetchDataFromDatabase();
 
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -231,7 +249,9 @@ public class DeveloperListActivity extends AppCompatActivity {
     }
 
 
-    private void fetchDataFromDatabase(){
+    private ArrayList<Developer> fetchDataFromDatabase(){
+
+        ArrayList<Developer> developers = new ArrayList<>();
 
         /* Query List On UI thread, since query is not large,
                  Cant affect UI thread
@@ -252,15 +272,14 @@ public class DeveloperListActivity extends AppCompatActivity {
                 String imageUrl = cursor.getString(imageUrlColumnIndex);
                 String profileUrl = cursor.getString(profileUrlColumnIndex);
 
-                mDeveloperList.add(new Developer(username,imageUrl,profileUrl));
+                developers.add(new Developer(username,imageUrl,profileUrl));
             }
         }
         finally {
             cursor.close();
         }
-        mDeveloperAdapter.add(mDeveloperList);
-        mDeveloperAdapter.notifyDataSetChanged();
-        sortList();
+        return developers;
     }
+
 
 }

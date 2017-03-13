@@ -8,10 +8,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.annotation.Nullable;
-import android.util.Log;
-import com.example.andelachallenge.data.DeveloperContract.DeveloperEntry;
 
-import static android.content.ContentValues.TAG;
+import com.example.andelachallenge.data.DeveloperContract.DeveloperEntry;
 
 /**
  * Created by codedentwickler on 3/8/17.
@@ -55,16 +53,6 @@ public class DeveloperProvider extends ContentProvider {
                 cursor = database.query(DeveloperEntry.TABLE_NAME, null, null, null, null,null,null);
                 break;
 
-            case DEVELOPERS_ID:
-                selection = DeveloperEntry._ID + "=?";
-                selectionArgs = new String[] {String.valueOf(ContentUris.parseId(uri))};
-
-                cursor = database.query(DeveloperEntry.TABLE_NAME, null,
-                        null, null, null,null,null);
-                Log.d(TAG,"Value of cursor position"+ String.valueOf(cursor.getPosition()));
-
-                break;
-
             default:
                 throw new IllegalArgumentException("Cannot perform query on unknown URI" +uri);
         }
@@ -85,27 +73,22 @@ public class DeveloperProvider extends ContentProvider {
     public Uri insert(Uri uri, ContentValues contentValues) {
 
         final int match = sUriMatcher.match(uri);
+        SQLiteDatabase database = mDbHelper.getWritableDatabase();
+
 
         switch (match){
 
             case DEVELOPERS:
 
-                long id = insertDeveloper(contentValues);
-                getContext().getContentResolver().notifyChange(uri, null);
+                long id = database.insert(DeveloperEntry.TABLE_NAME, null, contentValues);
+
+            getContext().getContentResolver().notifyChange(uri, null);
                 return ContentUris.withAppendedId(uri, id);
 
             default:
                 throw new IllegalArgumentException("Insertion Cannot be done on uri"+uri);
 
         }
-    }
-
-    private long insertDeveloper(ContentValues contentValues) {
-
-        SQLiteDatabase database = mDbHelper.getWritableDatabase();
-
-        return database.insert(DeveloperEntry.TABLE_NAME, null, contentValues);
-
     }
 
     @Override
