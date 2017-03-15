@@ -41,9 +41,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginStart="12dp"
+                android:textAllCaps="false"
+                android:textAppearance="?actionMenuTextAppearance"
                 android:gravity="center_vertical"
                 android:textColor="@color/list_text_color"
-                android:textSize="@dimen/list_text_size"
                 tools:text="@string/username_test" />
 
         </LinearLayout>
