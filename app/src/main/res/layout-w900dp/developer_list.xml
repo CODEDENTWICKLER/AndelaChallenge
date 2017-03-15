@@ -12,31 +12,15 @@
     This layout is a two-pane layout for the Items
     master/detail flow.
     -->
-    <RelativeLayout
-        android:layout_height="match_parent"
-        android:layout_width="@dimen/item_width"
-        >
 
     <com.example.andelachallenge.Views.RecyclerViewEmptySupport
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/item_list"
-        android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_width="@dimen/item_width"
         tools:context="com.example.andelachallenge.activities.DeveloperListActivity"
         tools:listitem="@layout/developer_list_content" />
-
-
-    <TextView android:id="@+id/list_empty"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:textAppearance="?android:textAppearanceLarge"
-        android:visibility="gone"
-        android:text="@string/loading"
-        />
-
-    </RelativeLayout>
 
     <FrameLayout
         android:id="@+id/item_detail_container"

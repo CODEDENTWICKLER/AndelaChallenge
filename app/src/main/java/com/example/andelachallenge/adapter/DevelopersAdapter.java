@@ -134,6 +134,7 @@ public class DevelopersAdapter extends RecyclerView.Adapter<DevelopersAdapter.De
             public void onClick(View v) {
                 if (DeveloperListActivity.mTwoPane) {
                     Bundle arguments = new Bundle();
+                    v.setBackgroundColor(mContext.getResources().getColor(R.color.gray));
                     arguments.putParcelable(DeveloperDetailFragment.ARG_ITEM, holder.mDeveloper);
                     DeveloperDetailFragment fragment = new DeveloperDetailFragment();
                     fragment.setArguments(arguments);
@@ -165,7 +166,7 @@ public class DevelopersAdapter extends RecyclerView.Adapter<DevelopersAdapter.De
 
     public void swap(ArrayList<Developer> developers){
         mSortedList.clear();
-        mSortedList.addAll(developers);
+        add(developers);
         notifyDataSetChanged();
     }
 
@@ -181,7 +182,7 @@ public class DevelopersAdapter extends RecyclerView.Adapter<DevelopersAdapter.De
         for (int i = mSortedList.size() - 1; i >= 0; i--) {
             final Developer developer = mSortedList.get(i);
             if (!developers.contains(developer)) {
-                mSortedList.remove(developer);
+                remove(developer);
             }
         }
         mSortedList.addAll(developers);

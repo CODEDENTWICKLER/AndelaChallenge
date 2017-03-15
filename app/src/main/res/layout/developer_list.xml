@@ -1,26 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
 
 <com.example.andelachallenge.Views.RecyclerViewEmptySupport
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/item_list"
     android:name="com.example.andelachallenge.activities.ItemListFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.example.andelachallenge.activities.DeveloperListActivity"
     tools:listitem="@layout/developer_list_content" />
-
-    <TextView android:id="@+id/list_empty"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:textAppearance="?android:textAppearanceLarge"
-        android:visibility="gone"
-        android:text="@string/loading"
-        />
-
-
-</RelativeLayout>

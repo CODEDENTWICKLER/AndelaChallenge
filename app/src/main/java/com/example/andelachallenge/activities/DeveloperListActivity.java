@@ -39,9 +39,8 @@ import static com.example.andelachallenge.Utils.GITHUB_PROFILE_URL_KEY;
 import static com.example.andelachallenge.Utils.GITHUB_QUERY_URL_WITH_PAGINATION;
 import static com.example.andelachallenge.Utils.GITHUB_USERNAME_KEY;
 import static com.example.andelachallenge.Utils.SIZE_PER_PAGE;
-import static com.example.andelachallenge.Utils.isNetworkConnected;
+import static com.example.andelachallenge.Utils.isInternetAvailable;
 
-;
 
 /**
  * An activity representing a list of Items. This activity
@@ -85,6 +84,8 @@ public class DeveloperListActivity extends AppCompatActivity {
 
         setUpRecyclerView();
 
+        notifyOffline();
+
         mDeveloperList = new ArrayList<>();
 
         mComparator = new Comparator<Developer>() {
@@ -96,36 +97,36 @@ public class DeveloperListActivity extends AppCompatActivity {
 
         };
         mDeveloperAdapter = new DevelopersAdapter(this, mComparator);
-
-//        || !savedInstanceState.containsKey(PERSIST_LIST_KEY)
-        if (savedInstanceState != null){
-            mDeveloperList = savedInstanceState.getParcelableArrayList(PERSIST_LIST_KEY);
-        }
-
-        else {
-            if (isNetworkConnected(this) && mDeveloperList.isEmpty()) {
-                fetchDataAndInsertIntoDatabase();
-            }
-            else
-                Utils.makeSnackBar(mRecyclerView,"Your device Currently Offline");
-
-            mDeveloperList.addAll(fetchDataFromDatabase());
-
-        }
-
-        if (mDeveloperList != null ){
-            mDeveloperAdapter.swap(mDeveloperList);
-        }
         mRecyclerView.setAdapter(mDeveloperAdapter);
+
+        if (savedInstanceState != null && savedInstanceState.containsKey(PERSIST_LIST_KEY)) {
+            mDeveloperList = savedInstanceState.getParcelableArrayList(PERSIST_LIST_KEY);
+            Log.d(TAG, "Length of list is:" + mDeveloperList.size());
+        } else {
+            if (isInternetAvailable(this) && mDeveloperList.isEmpty()) {
+                fetchDataAndInsertIntoDatabase(new ServerCallback() {
+                    @Override
+                    public void onSuccess() {
+                        mDeveloperList.addAll(fetchDataFromDatabase());
+                        if (mDeveloperList != null) {
+                            mDeveloperAdapter.swap(mDeveloperList);
+                            mDeveloperAdapter.notifyDataSetChanged();
+                        }
+                    }
+                });
+            }
+        }
+
+
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        mRecyclerView.emptyObserver.onChanged();
+        notifyOffline();
     }
 
-    private void setUpRecyclerView(){
+    private void setUpRecyclerView() {
         mRecyclerView = (RecyclerViewEmptySupport) findViewById(R.id.item_list);
 
         LinearLayoutManagerWrapper layoutManager = new LinearLayoutManagerWrapper(this);
@@ -134,13 +135,12 @@ public class DeveloperListActivity extends AppCompatActivity {
                 new DividerItemDecoration(this, layoutManager.getOrientation());
         mRecyclerView.addItemDecoration(dividerItemDecoration);
 
-        mRecyclerView.setEmptyView(findViewById(R.id.list_empty));
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
 
-        getMenuInflater().inflate(R.menu.developer_activity_list_menu,menu);
+        getMenuInflater().inflate(R.menu.developer_activity_list_menu, menu);
 
         MenuItem searchItem = menu.findItem(R.id.action_search);
 
@@ -155,9 +155,11 @@ public class DeveloperListActivity extends AppCompatActivity {
             @Override
             public boolean onQueryTextChange(String newText) {
 
-                final ArrayList<Developer> filteredModelList = filter(mDeveloperList, newText);
-                mDeveloperAdapter.replaceAll(filteredModelList);
-                mRecyclerView.scrollToPosition(0);
+                if (mDeveloperList != null && !mDeveloperList.isEmpty()) {
+                    final ArrayList<Developer> filteredModelList = filter(mDeveloperList, newText);
+                    mDeveloperAdapter.replaceAll(filteredModelList);
+                    mRecyclerView.scrollToPosition(0);
+                }
 
                 return true;
             }
@@ -165,9 +167,9 @@ public class DeveloperListActivity extends AppCompatActivity {
         return true;
     }
 
-    public void sortList(List<Developer> developers){
+    public void sortList(List<Developer> developers) {
 
-        Collections.sort( developers,mComparator);
+        Collections.sort(developers, mComparator);
         mDeveloperAdapter.notifyDataSetChanged();
     }
 
@@ -183,6 +185,10 @@ public class DeveloperListActivity extends AppCompatActivity {
         return filteredModelList;
     }
 
+    public interface ServerCallback {
+        void onSuccess();
+    }
+
     @Override
     public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
 
@@ -191,46 +197,43 @@ public class DeveloperListActivity extends AppCompatActivity {
             outState.putParcelableArrayList(PERSIST_LIST_KEY, mDeveloperList);
     }
 
-    private void fetchDataAndInsertIntoDatabase(){
+    private void fetchDataAndInsertIntoDatabase(final ServerCallback callback) {
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, GITHUB_QUERY_URL_WITH_PAGINATION, null,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
 
-                        getContentResolver().delete(DeveloperEntry.CONTENT_URI, null,null);
+                        getContentResolver().delete(DeveloperEntry.CONTENT_URI, null, null);
 
                         ContentValues[] contentValues;
                         try {
                             int total_count = response.getInt("total_count");
-                            int noOfPages = (int) Math.ceil(total_count/Integer.parseInt(SIZE_PER_PAGE));
+                            int noOfPages = (int) Math.ceil(total_count / Integer.parseInt(SIZE_PER_PAGE));
                             JSONArray developers = response.getJSONArray("items");
                             final int NO_OF_DEVELOPERS = developers.length();
                             contentValues = new ContentValues[NO_OF_DEVELOPERS];
 
-                            for (int i = 0; i < developers.length();i++){
+                            for (int i = 0; i < NO_OF_DEVELOPERS; i++) {
                                 contentValues[i] = new ContentValues();
                                 JSONObject currentDeveloper = developers.getJSONObject(i);
                                 String username = currentDeveloper.getString(GITHUB_USERNAME_KEY);
                                 String imageUrl = currentDeveloper.getString(GITHUB_IMAGE_URL_KEY);
                                 String profileUrl = currentDeveloper.getString(GITHUB_PROFILE_URL_KEY);
 
-                                contentValues[i].put(DeveloperEntry.COLUMN_DEVELOPER_USERNAME,username);
-                                contentValues[i].put(DeveloperEntry.COLUMN_DEVELOPER_GITHUB_PROFILE_URL,profileUrl);
-                                contentValues[i].put(DeveloperEntry.COLUMN_DEVELOPER_IMAGE_URL,imageUrl);
+                                contentValues[i].put(DeveloperEntry.COLUMN_DEVELOPER_USERNAME, username);
+                                contentValues[i].put(DeveloperEntry.COLUMN_DEVELOPER_GITHUB_PROFILE_URL, profileUrl);
+                                contentValues[i].put(DeveloperEntry.COLUMN_DEVELOPER_IMAGE_URL, imageUrl);
 
-//                                mDeveloperList.add(new Developer(username,imageUrl,profileUrl));
                             }
                             // Insert Data into DB
-                            int n = getContentResolver().bulkInsert(DeveloperEntry.CONTENT_URI,contentValues);
+                            int n = getContentResolver().bulkInsert(DeveloperEntry.CONTENT_URI, contentValues);
 
-                            Utils.makeSnackBar(mRecyclerView, n + " new row inserted into Developers Table ");
-
-//                            mDeveloperList = fetchDataFromDatabase();
+                            callback.onSuccess();
 
                         } catch (JSONException e) {
                             e.printStackTrace();
-                            Log.e(TAG,"An error occurred while parsing JSON: "+e.getMessage());
+                            Log.e(TAG, "An error occurred while parsing JSON: " + e.getMessage());
                         }
 
                     }
@@ -239,7 +242,7 @@ public class DeveloperListActivity extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
 
-                        Log.e(TAG, "Error: "+error.getMessage());
+                        Log.e(TAG, "Error: " + error.getMessage());
                     }
                 }
         );
@@ -249,7 +252,7 @@ public class DeveloperListActivity extends AppCompatActivity {
     }
 
 
-    private ArrayList<Developer> fetchDataFromDatabase(){
+    private ArrayList<Developer> fetchDataFromDatabase() {
 
         ArrayList<Developer> developers = new ArrayList<>();
 
@@ -265,20 +268,27 @@ public class DeveloperListActivity extends AppCompatActivity {
         int profileUrlColumnIndex = cursor.getColumnIndex(DeveloperEntry.COLUMN_DEVELOPER_GITHUB_PROFILE_URL);
 
         try {
-            cursor.moveToFirst();
-            while (cursor.moveToNext()) {
 
-                String username = cursor.getString(usernameColumnIndex);
-                String imageUrl = cursor.getString(imageUrlColumnIndex);
-                String profileUrl = cursor.getString(profileUrlColumnIndex);
+            if (cursor.moveToFirst()) {
+                do {
 
-                developers.add(new Developer(username,imageUrl,profileUrl));
+                    String username = cursor.getString(usernameColumnIndex);
+                    String imageUrl = cursor.getString(imageUrlColumnIndex);
+                    String profileUrl = cursor.getString(profileUrlColumnIndex);
+
+                    developers.add(new Developer(username, imageUrl, profileUrl));
+                } while (cursor.moveToNext());
             }
-        }
-        finally {
+        } finally {
             cursor.close();
         }
+
         return developers;
+    }
+
+    private void notifyOffline() {
+        if (!isInternetAvailable(this))
+            Utils.makeIndefiniteSnackBar(mRecyclerView, "Your device is Currently Offline");
     }
 
 

@@ -124,7 +124,9 @@ public class DeveloperDetailFragment extends Fragment {
                 R.string.share_text,mDeveloper.getUsername(),mDeveloper.getGithubProfileUrl());
         shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Developer Profile");
         shareIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
-        startActivity(Intent.createChooser(shareIntent,getString(R.string.share_via)));
+        if (shareIntent.resolveActivity(getActivity().getPackageManager()) != null) {
+            startActivity(Intent.createChooser(shareIntent, getString(R.string.share_via)));
+        }
 
     }
 }

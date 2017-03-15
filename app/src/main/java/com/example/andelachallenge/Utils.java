@@ -26,7 +26,7 @@ public final class Utils {
     private static final String SIZE_PER_PAGE_PARAMS = "per_page";
     public static final String SIZE_PER_PAGE = "100";
 
-    public static final String GITHUB_QUERY_URL =
+    private static final String GITHUB_QUERY_URL =
             "https://api.github.com/search/users?q=language:java+location:lagos";
 
     public static final String GITHUB_QUERY_URL_WITH_PAGINATION =
@@ -45,68 +45,43 @@ public final class Utils {
     private static final String LOG_TAG = "Utilities Logger";
 
 
-    public static void makeSnackBar(View view, String message){
+    public static void makeSnackBar(View view, String message) {
         Snackbar.make(view, message, Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show();
     }
 
+    public static void makeIndefiniteSnackBar(View view, String message) {
+        Snackbar.make(view, message, Snackbar.LENGTH_INDEFINITE)
+                .setAction("Action", null).show();
+    }
 
-//    private boolean isInternet(){
-//
-//        final Handler handler = new Handler();
-//        final boolean[] isRunning = {true};
-//        final boolean[] success = {false};
-//
-//        new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                while (isRunning[0]) {
-//                    try {
-//                        handler.post(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                success[0] = isConnected(mRecyclerView.getContext());
-//                                isRunning[0] = false;
-//                            }
-//                        });
-//                    }
-//                    catch (Exception e) {
-//                        Log.e(TAG, e.getMessage());
-//                    }
-//                }
-//            }
-//        }).start();
-//        return success[0];
-//    }
-
-    public static boolean isConnected(Context context){
-        if (isNetworkConnected(context)) {
+    public static boolean isConnected(Context context) {
+        if (isInternetAvailable(context)) {
 
             try {
                 HttpURLConnection urlConnection = (HttpURLConnection) new
                         URL("https://clients3.github.com/generate204").openConnection();
-                urlConnection.setRequestProperty("User-Agent","Android");
-                urlConnection.setRequestProperty("Connection","close");
+                urlConnection.setRequestProperty("User-Agent", "Android");
+                urlConnection.setRequestProperty("Connection", "close");
                 urlConnection.setConnectTimeout(1500);
                 urlConnection.connect();
 
                 return (urlConnection.getResponseCode() == 204 && urlConnection.getContentLength() == 0);
 
             } catch (IOException e) {
-                Log.e(LOG_TAG,"Error Checking internet connection");
+                Log.e(LOG_TAG, "Error Checking internet connection");
             }
 
-            }
-        else {
-            Log.d(LOG_TAG,"No Network Available");
+        } else {
+            Log.d(LOG_TAG, "No Network Available");
 
         }
         return false;
     }
 
-    public static boolean isNetworkConnected(Context context) {
+    public static boolean isInternetAvailable(Context context) {
         ConnectivityManager cm = (ConnectivityManager)
-                context.getSystemService( CONNECTIVITY_SERVICE );
+                context.getSystemService(CONNECTIVITY_SERVICE);
 
         if (cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState() == NetworkInfo.State.CONNECTED
                 || cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.CONNECTED)
